@@ -15,10 +15,12 @@ global y_bound
 global mainMap
 global mapsArr
 global numberOfMaps
-x_bound = 500 # setting size
-y_bound = 500 # setting size
+global numCycles
+numCycles  = 3
+x_bound = 10 # setting size
+y_bound = 10 # setting size
 mapsArr = []
-numberOfMaps = 5
+numberOfMaps = 10
 
 
 # General class for the 2D array
@@ -31,8 +33,15 @@ class twoDimArray:
         self.id = id
     
     def __str__(self):
+        strArr = "Array Uninitialized"
+        if(self.arrMap != None):
+            strArr = "Map:\n"
+            loopN = 0
+            while(loopN < y_bound):
+                strArr += str(self.arrMap[loopN]) + "\n"
+                loopN += 1
         isMainVal = "is" if self.isMain else "is not"
-        return("twoDimArray: " + str(self.id) + " " + isMainVal)
+        return("twoDimArray: " + str(self.id) + " " + isMainVal + " the main map\n" + strArr)
 
 
 #finding the values surrounding the current cell
@@ -51,31 +60,31 @@ def findSurrVal(arr, x, y):
         #print("top:"+str(top))
 
     #top right
-    if (x != x_bound and y != 0):
+    if (x != x_bound -1 and y != 0):
         top_right = arr[y - 1][x + 1]
         score += top_right
         #print("top_right:"+str(top_right))
 
     #right
-    if (x != x_bound):
+    if (x != x_bound - 1):
         right = arr[y][x + 1]
         score += right
         #print("right:"+str(right))
 
     #bottom right
-    if (x != x_bound and y != y_bound):
+    if (x != x_bound -1 and y != y_bound - 1):
         bottom_right = arr[y + 1][x + 1]
         score += bottom_right
         #print("bottom_right:"+str(bottom_right))
 
     #bottom
-    if (y != y_bound):
+    if (y != y_bound - 1):
         bottom = arr[y + 1][x]
         score += bottom
         #print("bottom:"+str(bottom))
 
     #bottom left
-    if (y != y_bound and x != 0):
+    if (y != y_bound - 1 and x != 0):
         bottom_left = arr[y + 1][x - 1]
         score += bottom_left
         #print("bottom_left:"+str(bottom_left))
@@ -110,7 +119,9 @@ def generateArray():
 
 # Conway rules
 
-def calculateNewVal(score, value):
+def calculateNewVal(inputVals):
+    score = inputVals[0]
+    value = inputVals[1]
     if (value == 1 and score < 2):
         return 0
     if (value == 1 and (score == 2 or score == 3)):
@@ -132,7 +143,7 @@ def initialzationMainMap():
 # does the threading with initialization for main map
 
 def initializationSetUp():
-    initThread = threading.Thread(target=initialzationMainMap)
+    initThread = threading.Thread(target=initialzationMainMap())
     initThread.start()
     tempNumber = 0
     while(tempNumber < numberOfMaps):
@@ -142,8 +153,8 @@ def initializationSetUp():
         mapsArr.append(tempMap)
         tempNumber += 1
     initThread.join()
-    printMaps()
-    print(mapsArr[0].arrMap)
+    #printMaps()
+    #print(mapsArr[0].arrMap)
 
 # printing the maps for visualization confirmation
 
@@ -156,28 +167,40 @@ def printMaps():
 # updating the map 
 # calls findSurrVal to update the map
 def updateMap(id):
-    oldArr = mapsArr[id.arrMap]
+    oldArr = mapsArr[id].arrMap
     newArr = []
     tempY = 0
     while(tempY < y_bound):
         tempX = 0
         tempNewXarr = []
         while(tempX < x_bound):
-            tempVal = calculateNewVal(findSurrVal(oldArr,tempX,tempY), oldArr[tempY][tempX])
+            tempVal = calculateNewVal(findSurrVal(oldArr,tempX,tempY))
             tempNewXarr.append(tempVal)
             tempX += 1
         newArr.append(tempNewXarr)
         tempY += 1
-    mapsArr[id.arrMap] = newArr
+    mapsArr[id].arrMap = newArr
 
 def updateMaps():
     tempNID = 0
     threads = []
     while(tempNID < numberOfMaps):
         containedN = tempNID
-        threads.append(threading.Thread(target=initialzationMainMap(updateMap(containedN))))
+        threads.append(threading.Thread(target=updateMap(containedN)))
         threads[containedN].start()
         tempNID += 1
+    tempJoin = 0
+    while(tempJoin < numberOfMaps):
+        threads[tempJoin].join()
+        tempJoin += 1
 
 
-#initializationSetUp()
+def cycles():
+    cycleCount = 0
+    while(cycleCount < numCycles):
+        updateMaps()
+        printMaps()
+        cycleCount += 1
+
+initializationSetUp()
+cycles()
