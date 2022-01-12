@@ -13,16 +13,19 @@ import threading
 # set size to 50x50
 #Hardcoded values
 
+
+global numCycles
+numCycles = 100
 global x_bound
-x_bound = 5
+x_bound = 10
 global y_bound
-y_bound = 5
+y_bound = 10
 global mainMap
 mainMap = None
 global mapsArr
 mapsArr = []
 global numMaps
-numMaps = 5
+numMaps = 10
 # number of maps is equal to the size of the mapsArr
 
 
@@ -38,8 +41,16 @@ class twoDimArray:
         self.id = ID
 
     def __str__(self):
+        strArr = "Array Uninitiliazed"
+        if (self.arrMap != None):
+            strArr = "Map:\n"
+            loopN = 0
+            while(loopN < y_bound):
+                strArr += str(self.arrMap[loopN]) + "\n"
+                loopN += 1
+            
         isMainVal = " is " if self.isMain else " is not "
-        return("twoDimArray: " + str(self.id) + isMainVal +"the main map\n")
+        return("twoDimArray: " + str(self.id) + isMainVal +"the main map\n" + strArr)
 
 
 
@@ -53,51 +64,70 @@ def findNeighborhoodValue(arr, x, y):
 
     #top
     if (y != 0):
+        # print("TOP")
         top = arr[y-1][x]
         score += top
-        #print("top:"+str(top))
+        # print("top:"+str(top))
+    # else:
+    #     print("INVALID top")
 
     #diagonal top right
-    if (x != x_bound and y != 0):
+    if (x != x_bound - 1 and y != 0):
+        # print("DIAGONAL TOP RIGHT")
         top_right = arr[y - 1][x + 1]
         score += top_right
-        #print("top_right:"+str(top_right))
+        # print("top_right:"+str(top_right))
+    # else:
+    #     print("INVALID top right")
 
     #right
-    if (x != x_bound):
+    # print(x)
+    if (x != x_bound - 1):
         right = arr[y][x + 1]
         score += right
-        #print("right:"+str(right))
+    #     print("right:"+str(right))
+    # else:
+    #     print("INVALID right")
 
     #diagonal bottom right
-    if (x != x_bound and y != y_bound):
+    if (x != x_bound - 1 and y != y_bound - 1):
         bottom_right = arr[y + 1][x + 1]
         score += bottom_right
-        #print("bottom_right:"+str(bottom_right))
+    #     print("bottom_right:"+str(bottom_right))
+    # else:
+    #     print("INVALID bottom right")
 
     #bottom
-    if (y != y_bound):
+    if (y != y_bound - 1):
         bottom = arr[y + 1][x]
         score += bottom
-        #print("bottom:"+str(bottom))
+    #     print("bottom:"+str(bottom))
+    # else:
+    #     print("INVALID bottom")
 
     #diagonal bottom left
-    if (y != y_bound and x != 0):
+    if (y != y_bound - 1 and x != 0):
         bottom_left = arr[y + 1][x - 1]
         score += bottom_left
-        #print("bottom_left:"+str(bottom_left))
+    #     print("bottom_left:"+str(bottom_left))
+    # else:
+    #     print("INVALID bottom left")
 
     #left
     if (x != 0):
         left = arr[y][x - 1]
         score += left
-        #print("left:"+str(left))
+    #     print("left:"+str(left))
+    # else:
+    #     print("INVALID left")
 
     #diagonal top left
     if (x != 0 and y != 0):
         top_left = arr[y - 1][x - 1]
         score += top_left
-        #print("top_left:"+str(top_left))
+    #     print("top_left:"+str(top_left))
+    # else:
+    #     print("INVALID top left")
 
     return(score, value)
 
@@ -139,6 +169,7 @@ def initializationSetUp():
     initThread.join()
     # printMaps()
     # print(mapsArr[0].arrMap)
+    
 
 def printMaps():
     loopN = 0
@@ -147,23 +178,27 @@ def printMaps():
         loopN += 1
 
 def updateMap(id):
-    oldArr = mapsArr[id.arrMap]
+    # print("Start: " + str(id))
+    oldArr = mapsArr[id].arrMap
     newArr = []
     tempY = 0
     while (tempY < y_bound):
         tempX = 0
         tempNewXarr = []
         while (tempX < x_bound):
-            tempNewVal = calculateNewVal(findNeighborhoodValue(oldArr, tempX, tempY), oldArr[tempY][tempX])
+            tempNewVal = calculateNewVal(findNeighborhoodValue(oldArr, tempX, tempY))
             tempNewXarr.append(tempNewVal)
             tempX += 1
         newArr.append(tempNewXarr)
         tempY += 1
-    mapsArr[id.arrMap] = newArr
+    mapsArr[id].arrMap = newArr
+    # print("End: " + str(id))
 
 
 
-def calculateNewVal (score, value):
+def calculateNewVal (inputVals):
+    score = inputVals[0]
+    value = inputVals[1]
     if (value == 1 and score < 2):
         return 0
     if (value == 1 and (score == 2 or score == 3)):
@@ -179,9 +214,26 @@ def updateMaps():
     tempIDN = 0
     threads = []
     while (tempIDN < numMaps):
+        # print("thread: " + str(tempIDN))
         containedN = tempIDN
-        threads.append(threading.Thread(target=initializeMainMap(updateMap(containedN))))
+        threads.append(threading.Thread(target=(updateMap(containedN))))
         threads[containedN].start()
         tempIDN += 1
+    # tempJoin = 0
+    # while (tempJoin < numMaps):
+    #     threads[tempJoin].join()
+    #     tempJoin += 1
 
-# initializationSetUp()
+
+def cycles():
+    cycleCount = 0
+    while (cycleCount < numCycles):
+        print("Cycle: " + str(cycleCount))
+        updateMaps()
+        printMaps()
+        cycleCount += 1
+
+
+initializationSetUp()
+# printMaps()
+cycles()
