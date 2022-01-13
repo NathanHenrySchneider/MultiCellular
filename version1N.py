@@ -15,11 +15,11 @@ import threading
 
 
 global numCycles
-numCycles = 100
+numCycles = 50
 global x_bound
-x_bound = 10
+x_bound = 50
 global y_bound
-y_bound = 10
+y_bound = 50
 global mainMap
 mainMap = None
 global mapsArr
@@ -27,7 +27,8 @@ mapsArr = []
 global numMaps
 numMaps = 10
 # number of maps is equal to the size of the mapsArr
-
+global mapsHistory
+mapsHistory = []
 
 
 
@@ -195,6 +196,90 @@ def updateMap(id):
     # print("End: " + str(id))
 
 
+def compareTwoMaps(map1, map2):
+    score = 0
+    loopY = 0
+    while (loopY < y_bound):
+        loopX = 0
+        while (loopX < x_bound):
+            if (map1[loopY][loopX] != map2[loopY][loopX]):
+                score += 1
+            loopX += 1
+        loopY += 1
+    return score
+
+def mapIsDead(map):
+    loopY = 0
+    while(loopY < y_bound):
+        loopX = 0
+        while (loopX < x_bound):
+            if (map.arrMap[loopY][loopX] != 0):
+                return False
+            loopX += 1
+        loopY += 1
+    return True
+
+def checkAllMapsDead():
+    tempN = 0
+    while (tempN < numMaps):
+        if (mapIsDead(mapsArr[tempN]) == False):
+            print("All maps are not dead")
+            return False
+        tempN += 1
+    print("All maps are dead")
+    return True
+
+def compareAllMaps():
+    comparisons = []
+    outerN = 0
+    while (outerN < numMaps):
+        innerN = outerN + 1
+        while (innerN < numMaps):
+            difVal = compareTwoMaps(mapsArr[outerN].arrMap, mapsArr[innerN].arrMap)
+            tempComp = []
+            tempComp.append(outerN)
+            tempComp.append(innerN)
+            tempComp.append(difVal)
+            comparisons.append(tempComp)
+            innerN += 1
+        outerN += 1
+    print("comparisons: " + str(comparisons))
+
+
+def checkAgainstMain(map):
+    score = 0
+    loopY = 0
+    while (loopY < y_bound):
+        loopX = 0
+        while (loopX < x_bound):
+            if (map.arrMap[loopY][loopX] != mainMap.arrMap[loopY][loopX]):
+                score += 1
+            loopX += 1
+        loopY += 1
+    print("Map: " + str(map.id) + " is " + str(score) + " close to main")
+    return score
+
+def checkAllAgainstMain():
+    closeness = []
+    tempN = 0
+    while (tempN < numMaps):
+        closeness.append(checkAgainstMain(mapsArr[tempN]))
+        tempN += 1
+    tempN = 0
+    highestScore = closeness[0]
+    highestArrs = []
+    while (tempN < numMaps):
+        if (closeness[tempN] == highestScore):
+            highestArrs.append(tempN)
+        elif (closeness[tempN] < highestScore):
+            highestArrs = []
+            highestArrs.append(tempN)
+            highestScore = closeness[tempN]
+       
+        tempN += 1
+    print("closest score: " + str(highestScore) + " belonging to map(s): " + str(highestArrs))
+    # return values tbd
+
 
 def calculateNewVal (inputVals):
     score = inputVals[0]
@@ -211,6 +296,7 @@ def calculateNewVal (inputVals):
 
 
 def updateMaps():
+    mapsHistory.append(mapsArr)
     tempIDN = 0
     threads = []
     while (tempIDN < numMaps):
@@ -225,13 +311,25 @@ def updateMaps():
     #     tempJoin += 1
 
 
+# def checkOneForStagnation():
+
+
+# def checkAllForStagnation():
+
+
 def cycles():
     cycleCount = 0
+    print("Seed Arrays: ")
+    printMaps()
     while (cycleCount < numCycles):
         print("Cycle: " + str(cycleCount))
         updateMaps()
         printMaps()
-        cycleCount += 1
+        compareAllMaps()
+        checkAllAgainstMain()
+        checkAllMapsDead()
+        # if (cycleCount > )
+        # cycleCount += 1
 
 
 initializationSetUp()
