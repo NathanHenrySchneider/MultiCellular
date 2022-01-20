@@ -25,7 +25,7 @@ mainMap = None
 global mapsArr
 mapsArr = []
 global numMaps
-numMaps = 3
+numMaps = 1
 # number of maps is equal to the size of the mapsArr
 global mapsHistory
 mapsHistory = []
@@ -172,6 +172,7 @@ def initializationSetUp():
         mapsArr.append(tempMap)
         tempN += 1
     initThread.join()
+    mapsHistory.append(mapsArr)
     # printMaps()
     # print(mapsArr[0].arrMap)
     
@@ -200,9 +201,9 @@ def updateMap(id):
     # print("End: " + str(id))
 
 
-def compareTwoMaps(map1, map2):
-    print("comparing: " )
-    print(str(map1) + "\n" + str(map2))
+def compareTwoMapsHelper(map1, map2):
+    # print("comparing: " )
+    # print(str(map1) + "\n" + str(map2))
     score = 0
     loopY = 0
     while (loopY < y_bound):
@@ -214,25 +215,56 @@ def compareTwoMaps(map1, map2):
         loopY += 1
     return score
 
-def mapIsDead(map):
+
+def compareTwoMaps(map1, map2):
+    map1temp = None
+    map2temp = None
+    if (isinstance(map1, list)):
+        map1temp = map1
+    else:
+        map1temp = map1.arrMap
+    if (isinstance(map2, list)):
+        map2temp = map2
+    else:
+        map2temp = map2.arrMap
+    
+    return compareTwoMapsHelper(map1temp, map2temp)
+
+
+
+def compareTwoMapsObjs(map1,map2):
+    # print("PROBLEM PROBLEM PROBLEM:")
+    # print(str(map1))
+    # print(str(map2))
+    return(compareTwoMaps(map1.arrMap, map2))
+
+# def compare
+
+def mapIsDeadFirstHelper(map):
     loopY = 0
     while(loopY < y_bound):
         loopX = 0
         while (loopX < x_bound):
-            if (map.arrMap[loopY][loopX] != 0):
+            if (map[loopY][loopX] != 0):
                 return False
             loopX += 1
         loopY += 1
     return True
 
+def mapIsDead(map):
+    if (isinstance(map, list)):
+        return mapIsDeadFirstHelper(map)
+    else:
+        return mapIsDeadFirstHelper(map.arrMap)
+
 def checkAllMapsDead():
     tempN = 0
     while (tempN < numMaps):
         if (mapIsDead(mapsArr[tempN]) == False):
-            print("All maps are not dead")
+            # print("All maps are not dead")
             return False
         tempN += 1
-    print("All maps are dead")
+    # print("All maps are dead")
     return True
 
 def compareAllMaps():
@@ -249,7 +281,7 @@ def compareAllMaps():
             comparisons.append(tempComp)
             innerN += 1
         outerN += 1
-    print("comparisons: " + str(comparisons))
+    # print("comparisons: " + str(comparisons))
 
 
 def checkAgainstMain(map):
@@ -262,7 +294,7 @@ def checkAgainstMain(map):
                 score += 1
             loopX += 1
         loopY += 1
-    print("Map: " + str(map.id) + " is " + str(score) + " close to main")
+    # print("Map: " + str(map.id) + " is " + str(score) + " close to main")
     return score
 
 def checkAllAgainstMain():
@@ -283,7 +315,7 @@ def checkAllAgainstMain():
             highestScore = closeness[tempN]
        
         tempN += 1
-    print("closest score: " + str(highestScore) + " belonging to map(s): " + str(highestArrs))
+    # print("closest score: " + str(highestScore) + " belonging to map(s): " + str(highestArrs))
     # return values tbd
 
 
@@ -300,10 +332,31 @@ def calculateNewVal (inputVals):
         return 1
     return 0
 
+def copyArrayDeep(map):
+    tempArr = []
+    tempY = 0
+    while (tempY < y_bound):
+        tempX = 0
+        tempYArr = []
+        while(tempX < x_bound):
+            tempYArr.append(map[tempY][tempX])
+            tempX += 1
+        tempArr.append(tempYArr)
+        tempY += 1
+    return tempArr
+
+def updateHistory():
+    tempN = 0
+    newHistoryTemp = []
+    while (tempN < numMaps):
+        newHistoryTemp.append(copyArrayDeep(mapsArr[tempN].arrMap))
+        tempN += 1
+    mapsHistory.append(newHistoryTemp)
 
 def updateMaps():
-    tempArrShallowCopy = mapsArr
-    mapsHistory.append(tempArrShallowCopy)
+    # tempArrShallowCopy = 
+
+    updateHistory()
     tempIDN = 0
     threads = []
     while (tempIDN < numMaps):
@@ -319,7 +372,7 @@ def updateMaps():
 
 
 def checkOneForStagnation(mapIDNum):
-    global cycleCount
+    # global cycleCount
     # check for dead
     print("checking for stagnation")
     if (mapIsDead(mapsHistory[cycleCount][mapIDNum])):
@@ -327,27 +380,31 @@ def checkOneForStagnation(mapIDNum):
     
     # check for same as previoius iterations
     # check against n-1
-    print(str(mapsHistory[cycleCount][mapIDNum]))
-    print(str(mapsHistory[cycleCount - 1][mapIDNum]))
+    # print(str(mapsHistory[cycleCount][mapIDNum]))
+    tempNNNN = mapsHistory[cycleCount - 1]
+    # print(tempNNNN)
+    # print("\n\n357" + str(mapsHistory[cycleCount - 1][mapIDNum]))
     
-    print("n-1" + str(compareTwoMaps(mapsHistory[cycleCount][mapIDNum].arrMap, mapsHistory[cycleCount - 1][mapIDNum].arrMap)))
-    if (compareTwoMaps(mapsHistory[cycleCount][mapIDNum].arrMap, mapsHistory[cycleCount - 1][mapIDNum].arrMap) == 0):
+    # print("n-1" + str(compareTwoMaps(mapsHistory[cycleCount][mapIDNum], mapsHistory[cycleCount - 1][mapIDNum])))
+    # print("dubeq:" + str(mapsHistory[cycleCount][mapIDNum].arrMap == mapsHistory[cycleCount - 1][mapIDNum].arrMap))
+    if (compareTwoMaps(mapsHistory[cycleCount][mapIDNum], mapsHistory[cycleCount - 1][mapIDNum]) == 0):
         return True
     
     # check against n-2
-    print("n -2" + str(compareTwoMaps(mapsHistory[cycleCount][mapIDNum].arrMap, mapsHistory[cycleCount - 2][mapIDNum].arrMap)))
-    if (compareTwoMaps(mapsHistory[cycleCount][mapIDNum].arrMap, mapsHistory[cycleCount - 2][mapIDNum].arrMap) == 0):
+    # print("n -2" + str(compareTwoMaps(mapsHistory[cycleCount][mapIDNum], mapsHistory[cycleCount - 2][mapIDNum])))
+    if (compareTwoMaps(mapsHistory[cycleCount][mapIDNum], mapsHistory[cycleCount - 2][mapIDNum]) == 0):
         return True
     
     return False
 
 
 def checkAllIsStagnation():
-    print("maps history: " + str(mapsHistory))
+    # print("maps history: " + str(mapsHistory))
     tempN = 0
     stagAccum = 0
     while (tempN < numMaps):
-        print("hit stagnant")
+        # print("hit stagnant")
+        # print("NEW ERROROROROROROROR: "+ str(tempN))
         if (checkOneForStagnation(tempN)):
             stagAccum += 1
         tempN += 1
@@ -355,22 +412,23 @@ def checkAllIsStagnation():
 
 
 def printMapsHistory():
-    global cycleCount
+    # global cycleCount
     tempN = 0
-    while (tempN < cycleCount - 1):
+    print("printing maps history\ncyclecount:" + str(cycleCount) + "\n")
+    while (tempN < cycleCount ):
         print("cycle count: " + str(cycleCount))
         print("history cycle: " + str(tempN))
         tempNN = 0
         while (tempNN < numMaps):
-            print(str(mapsHistory[tempN][tempN].arrMap))
+            print(str(mapsHistory[tempN][tempNN]))
             tempNN += 1
         tempN += 1
 
 def cycles():
     global cycleCount
     cycleCount = 0
-    print("Seed Arrays: ")
-    printMaps()
+    # print("Seed Arrays: ")
+    # printMaps()
     while (cycleCount < numCycles):
         print("Cycle: " + str(cycleCount))
         updateMaps()
@@ -384,8 +442,10 @@ def cycles():
             if (stagAccum == numMaps):
                 prntStr = "is"
             print (prntStr + " stagnant")
+        print("MAPS HISTORY -----------------\n")
         printMapsHistory()
-
+        print("end maps history -------------------\n")
+        # print("OFFFICIALALALA CYCLE COUNTTTSSSS: " + str(cycleCount))
         cycleCount += 1
         print("\n---------------------\n")
 
@@ -393,3 +453,6 @@ def cycles():
 initializationSetUp()
 # printMaps()
 cycles()
+
+
+# make deep copy of arrays for maps history
