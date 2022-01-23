@@ -202,8 +202,6 @@ def updateMap(id):
 
 
 def compareTwoMapsHelper(map1, map2):
-    # print("comparing: " )
-    # print(str(map1) + "\n" + str(map2))
     score = 0
     loopY = 0
     while (loopY < y_bound):
@@ -450,9 +448,10 @@ def cycles():
         print("\n---------------------\n")
 
 
-initializationSetUp()
+# initializationSetUp()
 # printMaps()
-cycles()
+# cycles()
 
 
 # make deep copy of arrays for maps history
+# print("YEHAW")
